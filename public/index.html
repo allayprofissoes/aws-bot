@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Multi-Bot | Gestão Inteligente</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    :root {
+      --primary-navy: #0a192f;
+      --secondary-navy: #112240;
+      --accent-blue: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --bg-dark: #020617;
+      --border-color: #1e293b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --card-bg: #0f172a;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0;
+      transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-white);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar Customization */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    header {
+      padding: 1rem 2rem;
+      background: var(--primary-navy);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-area i {
+      font-size: 1.5rem;
+      color: var(--accent-blue);
+    }
+
+    h1 { 
+      font-size: 1.25rem; 
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    button:hover { 
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    button:active { transform: translateY(0); }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-outline:hover {
+      background: var(--secondary-navy);
+      border-color: var(--text-muted);
+    }
+
+    .danger { background: var(--danger); }
+    .danger:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+    
+    .success { background: var(--success); }
+    .success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 65px);
+    }
+
+    aside {
+      background: var(--primary-navy);
+      border-right: 1px solid var(--border-color);
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    main {
+      padding: 2rem;
+      background: var(--bg-dark);
+      overflow-y: auto;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .bot-item, .stage-item {
+      background: var(--secondary-navy);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bot-item:hover, .stage-item:hover {
+      border-color: var(--accent-blue);
+      background: #1a2c4d;
+    }
+
+    .bot-item.active, .stage-item.active {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+      box-shadow: inset 4px 0 0 var(--accent-blue);
+    }
+
+    .bot-item strong, .stage-item strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      margin-top: 8px;
+    }
+
+    .status-online { color: var(--success); }
+    .status-offline { color: var(--danger); }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-white);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      color: var(--text-white);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.875rem;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .qr-box {
+      width: 240px;
+      height: 240px;
+      background: white;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--primary-navy);
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+      width: fit-content;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-white);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .option-row {
+      background: var(--secondary-navy);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background: var(--secondary-navy);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .stage-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.2;
+    }
+
+    .group-item {
+      padding: 12px;
+      background: var(--secondary-navy);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .group-item:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 1024px) {
+      .layout, .stage-layout {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        max-height: 300px;
+      }
+    }
+
+    /* Custom Checkbox */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 10px;
+    }
+
+    .checkbox-container input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+    }
+
+    pre {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <i class="fas fa-robot"></i>
+      <h1>Painel Multi-Bot</h1>
+    </div>
+    <button id="btnNovoBot">
+      <i class="fas fa-plus"></i> Adicionar Novo Bot
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="sidebar-title">Seus Dispositivos</div>
+      <div id="botsList">
+        <!-- Bots will be rendered here -->
+      </div>
+    </aside>
+
+    <main>
+      <div id="emptyState" class="panel">
+        <div class="empty-state">
+          <i class="fas fa-message"></i>
+          <h3>Nenhum bot selecionado</h3>
+          <p>Escolha um bot na lista lateral para gerenciar suas configurações e etapas.</p>
+        </div>
+      </div>
+
+      <div id="botView" style="display:none;">
+        <div class="panel">
+          <div class="card-header">
+            <div>
+              <h2 id="botTitle">Nome do Bot</h2>
+              <div id="botStatus" class="status-badge">
+                <i class="fas fa-circle"></i> <span>Status</span>
+              </div>
+            </div>
+            <div class="row" style="margin: 0;">
+              <button id="btnStart" class="success"><i class="fas fa-play"></i> Iniciar</button>
+              <button id="btnStop" class="btn-outline"><i class="fas fa-stop"></i> Parar</button>
+              <button id="btnRestart" class="danger"><i class="fas fa-sync"></i> Resetar QR</button>
+              <button id="btnDelete" class="danger"><i class="fas fa-trash"></i> Apagar</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col" style="max-width:280px;">
+              <div class="qr-container">
+                <label><i class="fas fa-qrcode"></i> Conexão WhatsApp</label>
+                <div class="qr-box" id="qrBox">
+                  <div class="muted">Aguardando...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <label><i class="fas fa-users-rectangle"></i> Grupos Detectados</label>
+              <div id="gruposWrap" class="muted" style="max-height: 240px; overflow-y: auto;">
+                Nenhum grupo carregado.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="geral"><i class="fas fa-cog"></i> Geral</button>
+          <button class="tab-btn" data-tab="etapas"><i class="fas fa-route"></i> Etapas</button>
+          <button class="tab-btn" data-tab="usuarios"><i class="fas fa-users"></i> Usuários</button>
+          <button class="tab-btn" data-tab="registros"><i class="fas fa-list-ul"></i> Registros</button>
+        </div>
+
+        <!-- Tab Geral -->
+        <div id="tab-geral" class="tab-content active panel">
+          <form id="generalForm">
+            <div class="row">
+              <div class="col">
+                <label>Nome do Bot</label>
+                <input name="nomeBot" placeholder="Ex: Atendimento Comercial" />
+              </div>
+              <div class="col">
+                <label>Etapa Inicial (ID)</label>
+                <input name="etapaInicial" placeholder="Ex: inicio" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label>ID Grupo de Oração</label>
+                <input name="grupoOracaoId" placeholder="ID do WhatsApp" />
+              </div>
+              <div class="col">
+                <label>ID Grupo de Estudo</label>
+                <input name="grupoEstudoId" placeholder="ID do WhatsApp" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label>Tempo de Resposta (ms)</label>
+                <input name="tempoResposta" type="number" value="2000" />
+              </div>
+              <div class="col">
+                <label>Limite de Mensagens</label>
+                <input name="limiteMensagens" type="number" value="200" />
+              </div>
+              <div class="col">
+                <label>Reset Mensagens (ms)</label>
+                <input name="tempoResetMensagensMs" type="number" value="3600000" />
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+              <button class="success" type="submit">
+                <i class="fas fa-save"></i> Salvar Configurações
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab Etapas -->
+        <div id="tab-etapas" class="tab-content panel">
+          <div class="stage-layout">
+            <div>
+              <div class="sidebar-title">Fluxo de Conversa</div>
+              <div class="row" style="gap: 8px; margin-bottom: 1rem;">
+                <button id="btnNovaEtapa" type="button" style="flex: 1;">
+                  <i class="fas fa-plus"></i> Nova
+                </button>
+                <button id="btnExcluirEtapa" type="button" class="danger" style="flex: 1;">
+                  <i class="fas fa-trash"></i> Excluir
+                </button>
+              </div>
+              <div id="stagesList"></div>
+            </div>
+
+            <div>
+              <form id="stageForm">
+                <div class="card-header" style="margin-bottom: 1rem;">
+                  <h3>Editor de Etapa</h3>
+                </div>
+                
+                <div class="row">
+                  <div class="col">
+                    <label>ID da Etapa (único)</label>
+                    <input name="id" placeholder="Ex: boas_vindas" />
+                  </div>
+                  <div class="col">
+                    <label>Nome Amigável</label>
+                    <input name="nome" placeholder="Ex: Boas Vindas" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col">
+                    <label>Tipo de Etapa</label>
+                    <select name="tipo" id="stageTipo">
+                      <option value="menu">Menu de Opções</option>
+                      <option value="texto">Apenas Texto</option>
+                      <option value="entrada">Coleta de Dados (Entrada)</option>
+                    </select>
+                  </div>
+                  <div class="col">
+                    <label>Navegação</label>
+                    <div class="checkbox-container">
+                      <input type="checkbox" name="aceitaVoltar" id="aceitaVoltar" />
+                      <span>Permitir voltar ao menu (tecla 0)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <label>Mensagem que o Bot enviará</label>
+                <textarea name="mensagem" placeholder="Escreva aqui o texto que o usuário receberá..."></textarea>
+
+                <!-- Campos Dinâmicos: Menu -->
+                <div id="menuFields" style="display:none; margin-top: 1.5rem;">
+                  <div class="sidebar-title">Opções do Menu</div>
+                  <div id="menuOptionsWrap"></div>
+                  <button id="btnAddOption" type="button" class="btn-outline" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-plus-circle"></i> Adicionar Nova Opção
+                  </button>
+                </div>
+
+                <!-- Campos Dinâmicos: Entrada -->
+                <div id="entradaFields" style="display:none; margin-top: 1.5rem;">
+                  <div class="sidebar-title">Configuração de Entrada</div>
+                  <div class="row">
+                    <div class="col">
+                      <label>Salvar resposta na variável:</label>
+                      <input name="salvarEm" placeholder="Ex: nome_usuario" />
+                    </div>
+                    <div class="col">
+                      <label>Próxima Etapa após responder:</label>
+                      <input name="proximaEtapa" placeholder="ID da próxima etapa" />
+                    </div>
+                  </div>
+
+                  <div class="sidebar-title" style="margin-top: 1rem;">Ação Automática</div>
+                  <label>Tipo da Ação</label>
+                  <select name="acaoTipo" id="acaoTipo">
+                    <option value="">Nenhuma ação</option>
+                    <option value="enviar_grupo">Enviar dados para um Grupo</option>
+                  </select>
+
+                  <div id="acaoEnviarGrupoFields" style="display:none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                    <div class="row">
+                      <div class="col">
+                        <label>Campo de Configuração do Grupo</label>
+                        <input name="acaoGrupoCampoConfig" placeholder="grupoOracaoId ou grupoEstudoId" />
+                      </div>
+                      <div class="col">
+                        <label>Nome da Lista de Registros</label>
+                        <input name="acaoSalvarEmLista" placeholder="Ex: leads_vendas" />
+                      </div>
+                    </div>
+                    <label>Template da Mensagem para o Grupo</label>
+                    <textarea name="acaoTemplate" placeholder="Use {{variavel}} para incluir dados coletados..."></textarea>
+                  </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                  <button class="success" type="submit">
+                    <i class="fas fa-check-circle"></i> Salvar Etapa
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Usuários -->
+        <div id="tab-usuarios" class="tab-content panel">
+          <div class="card-header">
+            <h2>Usuários Ativos</h2>
+            <button class="btn-outline" onclick="loadUsuarios()"><i class="fas fa-sync"></i> Atualizar</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <div id="tabUsuariosContent">
+              <div class="empty-state">Aguardando carregamento...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Registros -->
+        <div id="tab-registros" class="tab-content panel">
+          <div class="card-header">
+            <h2>Registros de Atividade</h2>
+            <button class="btn-outline" onclick="loadRegistros()"><i class="fas fa-sync"></i> Atualizar</button>
+          </div>
+          <div id="tabRegistrosContent">
+            <div class="empty-state">Aguardando carregamento...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const socket = io();
+    let bots = [];
+    let selectedBotId = null;
+    let currentConfig = null;
+    let selectedStageId = null;
+
+    const botsList = document.getElementById('botsList');
+    const emptyState = document.getElementById('emptyState');
+    const botView = document.getElementById('botView');
+    const botTitle = document.getElementById('botTitle');
+    const botStatus = document.getElementById('botStatus');
+    const qrBox = document.getElementById('qrBox');
+    const gruposWrap = document.getElementById('gruposWrap');
+    const generalForm = document.getElementById('generalForm');
+    const stagesList = document.getElementById('stagesList');
+    const stageForm = document.getElementById('stageForm');
+    const stageTipo = document.getElementById('stageTipo');
+    const menuFields = document.getElementById('menuFields');
+    const entradaFields = document.getElementById('entradaFields');
+    const menuOptionsWrap = document.getElementById('menuOptionsWrap');
+    const acaoTipo = document.getElementById('acaoTipo');
+    const acaoEnviarGrupoFields = document.getElementById('acaoEnviarGrupoFields');
+    const tabUsuarios = document.getElementById('tabUsuariosContent');
+    const tabRegistros = document.getElementById('tabRegistrosContent');
+
+    socket.on('snapshot', (data) => {
+  bots = data.bots || [];
+  renderBots();
+
+  if (selectedBotId && bots.find(b => b.id === selectedBotId)) {
+    renderSelectedBotCard();
+  } else if (bots.length && !selectedBotId) {
+    selectedBotId = bots[0].id;
+    loadBot();
+  } else if (selectedBotId && !bots.find(b => b.id === selectedBotId)) {
+    selectedBotId = null;
+    emptyState.style.display = 'block';
+    botView.style.display = 'none';
+  }
+});
+
+    // Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // Bot Actions
+    document.getElementById('btnNovoBot').addEventListener('click', async () => {
+  const nomeBot = prompt('Nome do novo bot:');
+  if (nomeBot === null) return;
+
+  await fetch('/api/bots', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nomeBot })
+  });
+});
+
+    document.getElementById('btnStart').addEventListener('click', () => {
+      if (selectedBotId) fetch(`/api/bots/${selectedBotId}/start`, { method: 'POST' });
+    });
+document.getElementById('btnDelete').addEventListener('click', async () => {
+  if (!selectedBotId) return;
+
+  const confirmacao = prompt(`Digite "${selectedBotId}" para confirmar a exclusão do bot:`);
+
+  if (confirmacao !== selectedBotId) {
+    alert('Confirmação incorreta. Bot não apagado.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/bots/${selectedBotId}`, {
+      method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      throw new Error(data.error || 'Erro ao apagar bot');
+    }
+
+    alert('Bot apagado com sucesso!');
+
+    selectedBotId = null;
+    bots = [];
+
+    await loadBots?.(); // se existir
+    location.reload(); // força atualizar painel
+
+  } catch (error) {
+    alert('Erro ao apagar bot: ' + error.message);
+  }
+});
+    document.getElementById('btnStop').addEventListener('click', () => {
+      if (selectedBotId) fetch(`/api/bots/${selectedBotId}/stop`, { method: 'POST' });
+    });
+
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      if (selectedBotId && confirm('Isso irá desconectar o bot atual e gerar um novo QR Code. Continuar?')) {
+        fetch(`/api/bots/${selectedBotId}/restart`, { method: 'POST' });
+      }
+    });
+
+    // Config Actions
+    generalForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentConfig) return;
+      const formData = new FormData(generalForm);
+      currentConfig.nomeBot = formData.get('nomeBot');
+      currentConfig.etapaInicial = formData.get('etapaInicial');
+      currentConfig.grupoOracaoId = formData.get('grupoOracaoId');
+      currentConfig.grupoEstudoId = formData.get('grupoEstudoId');
+      currentConfig.tempoResposta = parseInt(formData.get('tempoResposta'));
+      currentConfig.limiteMensagens = parseInt(formData.get('limiteMensagens'));
+      currentConfig.tempoResetMensagensMs = parseInt(formData.get('tempoResetMensagensMs'));
+      await saveConfig();
+      alert('Configurações gerais salvas com sucesso!');
+    });
+
+    // Stage Actions
+    document.getElementById('btnNovaEtapa').addEventListener('click', () => {
+      const id = prompt('ID da nova etapa:');
+      if (!id) return;
+      if (currentConfig.etapas[id]) return alert('Este ID já existe.');
+      currentConfig.etapas[id] = { id, nome: id, tipo: 'texto', mensagem: '' };
+      selectedStageId = id;
+      renderStagesList();
+      loadStageEditor();
+    });
+
+    document.getElementById('btnExcluirEtapa').addEventListener('click', async () => {
+      if (!currentConfig || !selectedStageId) return;
+      if (!confirm(`Deseja realmente excluir a etapa "${selectedStageId}"?`)) return;
+      delete currentConfig.etapas[selectedStageId];
+      selectedStageId = Object.keys(currentConfig.etapas)[0] || null;
+      await saveConfig();
+      renderStagesList();
+      loadStageEditor();
+    });
+
+    document.getElementById('btnAddOption').addEventListener('click', () => addOptionRow());
+
+    stageTipo.addEventListener('change', refreshStageConditionalFields);
+    acaoTipo.addEventListener('change', refreshStageConditionalFields);
+
+    stageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentConfig || !selectedStageId) return;
+
+      const formData = Object.fromEntries(new FormData(stageForm).entries());
+      const aceitaVoltar = document.getElementById('aceitaVoltar').checked;
+
+      const stage = {
+        id: formData.id.trim(),
+        nome: formData.nome.trim(),
+        tipo: formData.tipo,
+        mensagem: formData.mensagem,
+        aceitaVoltar
+      };
+
+      if (!stage.id) return alert('O ID da etapa é obrigatório.');
+
+      if (stage.tipo === 'menu') {
+        stage.opcoes = collectOptions();
+      } else if (stage.tipo === 'entrada') {
+        stage.salvarEm = formData.salvarEm || '';
+        stage.proximaEtapa = formData.proximaEtapa || '';
+        if (formData.acaoTipo === 'enviar_grupo') {
+          stage.acao = {
+            tipo: 'enviar_grupo',
+            grupoCampoConfig: formData.acaoGrupoCampoConfig || '',
+            salvarEmLista: formData.acaoSalvarEmLista || '',
+            template: formData.acaoTemplate || ''
+          };
+        }
+      }
+
+      if (selectedStageId !== stage.id) {
+        delete currentConfig.etapas[selectedStageId];
+        selectedStageId = stage.id;
+      }
+
+      currentConfig.etapas[stage.id] = stage;
+      await saveConfig();
+      renderStagesList();
+      loadStageEditor();
+      alert('Etapa salva com sucesso!');
+    });
+
+    // Rendering Functions
+    function renderBots() {
+      botsList.innerHTML = bots.map(bot => {
+        const isOnline = ['conectado', 'autenticado'].includes(bot.status);
+        return `
+          <div class="bot-item ${bot.id === selectedBotId ? 'active' : ''}" onclick="selectBot('${bot.id}')">
+            <strong><i class="fas fa-robot"></i> ${escapeHtml(bot.nomeBot || bot.id)}</strong>
+            <span class="muted">${escapeHtml(bot.id)}</span>
+            <div class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
+              <i class="fas fa-circle"></i> <span>${escapeHtml(bot.status)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadBot() {
+      if (!selectedBotId) return;
+      await Promise.all([loadConfig(), loadUsuarios(), loadRegistros()]);
+      renderSelectedBotCard();
+    }
+
+    function renderSelectedBotCard() {
+      const bot = bots.find(b => b.id === selectedBotId);
+      if (!bot) {
+        emptyState.style.display = 'block';
+        botView.style.display = 'none';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      botView.style.display = 'block';
+      botTitle.textContent = bot.nomeBot || bot.id;
+      
+      const isOnline = bot.status === 'online' || bot.status === 'connected';
+      botStatus.className = `status-badge ${isOnline ? 'status-online' : 'status-offline'}`;
+      botStatus.querySelector('span').textContent = bot.status;
+
+      if (bot.qr) {
+        qrBox.innerHTML = `<img src="${bot.qr}" alt="QR Code">`;
+      } else {
+        qrBox.innerHTML = '<div class="muted"><i class="fas fa-unlink" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i> Sem QR Code</div>';
+      }
+
+      if (bot.grupos?.length) {
+        gruposWrap.innerHTML = bot.grupos.map(g => `
+          <div class="group-item">
+            <strong><i class="fas fa-users"></i> ${escapeHtml(g.nome)}</strong><br>
+            <span class="muted" style="font-size: 10px;">${escapeHtml(g.id)}</span>
+          </div>
+        `).join('');
+      } else {
+        gruposWrap.innerHTML = '<div class="empty-state" style="height: 100px;"><p>Nenhum grupo detectado.</p></div>';
+      }
+    }
+
+    async function loadConfig() {
+  const res = await fetch(`/api/bots/${selectedBotId}/config`);
+  currentConfig = await res.json();
+
+  if (!currentConfig || typeof currentConfig !== 'object') {
+    console.error('Config inválida recebida da API:', currentConfig);
+    alert('Configuração inválida recebida do servidor.');
+    return;
+  }
+
+  // garante estrutura mínima
+  if (!currentConfig.etapas || typeof currentConfig.etapas !== 'object') {
+    currentConfig.etapas = {};
+  }
+
+  generalForm.nomeBot.value = currentConfig.nomeBot || '';
+  generalForm.etapaInicial.value = currentConfig.etapaInicial || '';
+  generalForm.grupoOracaoId.value = currentConfig.grupoOracaoId || '';
+  generalForm.grupoEstudoId.value = currentConfig.grupoEstudoId || '';
+  generalForm.tempoResposta.value = currentConfig.tempoResposta || 2000;
+  generalForm.limiteMensagens.value = currentConfig.limiteMensagens || 200;
+  generalForm.tempoResetMensagensMs.value = currentConfig.tempoResetMensagensMs || 3600000;
+
+  const ids = Object.keys(currentConfig.etapas);
+
+  if (!selectedStageId || !currentConfig.etapas?.[selectedStageId]) {
+    selectedStageId = ids[0] || null;
+  }
+
+  renderStagesList();
+  loadStageEditor();
+}
+
+    async function saveConfig() {
+      await fetch(`/api/bots/${selectedBotId}/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentConfig)
+      });
+    }
+
+    function renderStagesList() {
+      const etapas = currentConfig?.etapas || {};
+      stagesList.innerHTML = Object.values(etapas).map(stage => `
+        <div class="stage-item ${stage.id === selectedStageId ? 'active' : ''}" onclick="selectStage('${stage.id}')">
+          <strong>${escapeHtml(stage.nome || stage.id)}</strong>
+          <span class="muted">${escapeHtml(stage.id)} • <i class="fas fa-tag"></i> ${escapeHtml(stage.tipo)}</span>
+        </div>
+      `).join('');
+    }
+
+    function loadStageEditor() {
+  if (!currentConfig || !currentConfig.etapas || !selectedStageId || !currentConfig.etapas[selectedStageId]) {
+    clearStageEditor();
+    return;
+  }
+
+  const stage = currentConfig.etapas[selectedStageId];
+
+  stageForm.id.value = stage.id || '';
+  stageForm.nome.value = stage.nome || '';
+  stageForm.tipo.value = stage.tipo || 'texto';
+  stageForm.mensagem.value = stage.mensagem || '';
+  document.getElementById('aceitaVoltar').checked = !!stage.aceitaVoltar;
+
+  stageForm.salvarEm.value = stage.salvarEm || '';
+  stageForm.proximaEtapa.value = stage.proximaEtapa || '';
+
+  stageForm.acaoTipo.value = stage.acao?.tipo || '';
+  stageForm.acaoGrupoCampoConfig.value = stage.acao?.grupoCampoConfig || '';
+  stageForm.acaoSalvarEmLista.value = stage.acao?.salvarEmLista || '';
+  stageForm.acaoTemplate.value = stage.acao?.template || '';
+
+  menuOptionsWrap.innerHTML = '';
+  if (Array.isArray(stage.opcoes)) {
+    stage.opcoes.forEach(op => addOptionRow(op));
+  }
+
+  refreshStageConditionalFields();
+}
+
+    function clearStageEditor() {
+      stageForm.reset();
+      menuOptionsWrap.innerHTML = '';
+      refreshStageConditionalFields();
+    }
+
+    function refreshStageConditionalFields() {
+      const tipo = stageForm.tipo.value;
+      const actionType = stageForm.acaoTipo.value;
+
+      menuFields.style.display = tipo === 'menu' ? 'block' : 'none';
+      entradaFields.style.display = tipo === 'entrada' ? 'block' : 'none';
+      acaoEnviarGrupoFields.style.display = (tipo === 'entrada' && actionType === 'enviar_grupo') ? 'block' : 'none';
+    }
+
+    function addOptionRow(data = {}) {
+      const div = document.createElement('div');
+      div.className = 'option-row';
+      div.innerHTML = `
+        <div class="row">
+          <div class="col">
+            <label>Tecla</label>
+            <input class="opt-tecla" value="${escapeAttr(data.tecla || '')}" placeholder="Ex: 1" />
+          </div>
+          <div class="col">
+            <label>Rótulo (Texto)</label>
+            <input class="opt-rotulo" value="${escapeAttr(data.rotulo || '')}" placeholder="Ex: Falar com Atendente" />
+          </div>
+          <div class="col">
+            <label>Destino (ID Etapa)</label>
+            <input class="opt-destino" value="${escapeAttr(data.destino || '')}" placeholder="Ex: etapa_atendimento" />
+          </div>
+        </div>
+        <button type="button" class="danger btn-outline" style="padding: 5px 10px; font-size: 12px;" onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i> Remover Opção
+        </button>
+      `;
+      menuOptionsWrap.appendChild(div);
+    }
+
+    function collectOptions() {
+      return Array.from(menuOptionsWrap.querySelectorAll('.option-row')).map(row => ({
+        tecla: row.querySelector('.opt-tecla').value.trim(),
+        rotulo: row.querySelector('.opt-rotulo').value.trim(),
+        destino: row.querySelector('.opt-destino').value.trim()
+      })).filter(op => op.tecla && op.destino);
+    }
+
+    async function loadUsuarios() {
+      if (!selectedBotId) return;
+      const res = await fetch(`/api/bots/${selectedBotId}/usuarios`);
+      const rows = await res.json();
+
+      if (!rows.length) {
+        tabUsuarios.innerHTML = '<div class="empty-state"><i class="fas fa-user-slash"></i><p>Nenhum usuário interagiu ainda.</p></div>';
+        return;
+      }
+
+      tabUsuarios.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th><i class="fas fa-user"></i> Nome</th>
+              <th><i class="fas fa-phone"></i> Número</th>
+              <th><i class="fas fa-map-marker-alt"></i> Etapa Atual</th>
+              <th><i class="fas fa-envelope"></i> Msgs</th>
+              <th><i class="fas fa-clock"></i> Última Interação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td><strong>${escapeHtml(r.nome || 'N/A')}</strong></td>
+                <td>${escapeHtml(r.numero || '')}</td>
+                <td><span class="status-badge" style="background: rgba(37,99,235,0.1); color: var(--accent-blue);">${escapeHtml(r.etapa || '')}</span></td>
+                <td>${r.mensagens || 0}</td>
+                <td class="muted">${formatDate(r.ultimaInteracao)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function loadRegistros() {
+      if (!selectedBotId) return;
+      const res = await fetch(`/api/bots/${selectedBotId}/registros`);
+      const rows = await res.json();
+
+      if (!rows.length) {
+        tabRegistros.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>Nenhum registro encontrado.</p></div>';
+        return;
+      }
+
+      tabRegistros.innerHTML = rows.map(r => `
+        <div class="panel" style="background: rgba(0,0,0,0.2); border-style: dashed;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span><strong>Lista:</strong> <span class="status-badge">${escapeHtml(r.lista || '')}</span></span>
+            <span class="muted"><i class="fas fa-calendar-alt"></i> ${formatDate(r.criadoEm)}</span>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <strong>Etapa de Origem:</strong> <code>${escapeHtml(r.etapaId || '')}</code>
+          </div>
+          <pre style="white-space:pre-wrap;background:var(--bg-dark);padding:15px;border-radius:10px;border: 1px solid var(--border-color); color: #a5b4fc;">
+  ${escapeHtml(r.texto || 'Sem conteúdo')}
+</pre>
+        </div>
+      `).join('');
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      return new Date(value).toLocaleString('pt-BR');
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function escapeAttr(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    window.selectBot = async function(botId) {
+      selectedBotId = botId;
+      renderBots();
+      await loadBot();
+    };
+
+    window.selectStage = function(stageId) {
+      selectedStageId = stageId;
+      renderStagesList();
+      loadStageEditor();
+    };
+  </script>
+</body>
+</html>

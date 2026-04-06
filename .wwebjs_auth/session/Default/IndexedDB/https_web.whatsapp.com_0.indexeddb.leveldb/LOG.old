@@ -1,0 +1,13 @@
+2026/04/02-22:43:16.238 4998 Reusing MANIFEST C:\Users\Luan\Desktop\Nova pasta (2)\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/04/02-22:43:16.239 4998 Recovering log #18
+2026/04/02-22:43:16.280 4998 Reusing old log C:\Users\Luan\Desktop\Nova pasta (2)\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000018.log 
+2026/04/02-22:44:19.206 4998 Level-0 table #23: started
+2026/04/02-22:44:19.241 4998 Level-0 table #23: 1445796 bytes OK
+2026/04/02-22:44:19.246 4998 Delete type=0 #18
+2026/04/02-22:44:19.833 2284 Compacting 1@1 + 1@2 files
+2026/04/02-22:44:19.956 2284 Generated table #24@1: 53006 keys, 2224412 bytes
+2026/04/02-22:44:19.963 2284 Generated table #25@1: 1568 keys, 81426 bytes
+2026/04/02-22:44:19.963 2284 Compacted 1@1 + 1@2 files => 2305838 bytes
+2026/04/02-22:44:19.967 2284 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/04/02-22:44:19.967 2284 Delete type=2 #20
+2026/04/02-22:44:19.967 2284 Delete type=2 #23

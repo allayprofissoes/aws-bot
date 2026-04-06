@@ -1,0 +1,28 @@
+{
+  "279615440433207@lid": {
+    "nome": "Luan Henrique",
+    "etapa": "biblia_confirmacao",
+    "mensagens": 25,
+    "ultimaInteracao": 1775241955734,
+    "nomeOracao": null,
+    "dados": {
+      "nomeOracao": "Eu",
+      "pedidoOracao": "Teste",
+      "observacaoEstudo": "Luan Henrique"
+    }
+  },
+  "75600635162627@lid": {
+    "nome": "amigo",
+    "etapa": "menu",
+    "mensagens": 1,
+    "ultimaInteracao": 1775182114645,
+    "nomeOracao": null
+  },
+  "109457308663892@lid": {
+    "nome": "amigo",
+    "etapa": "menu",
+    "mensagens": 1,
+    "ultimaInteracao": 1775182114673,
+    "nomeOracao": null
+  }
+}
