@@ -126,20 +126,18 @@ async start() {
   this.status = 'inicializando';
   this.onChange();
 
-  this.client = new Client({
-    authStrategy: new LocalAuth({ clientId: this.botId }),
-    puppeteer: {
-      executablePath: '/usr/bin/chromium-browser',
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-      ]
-    }
-  });
-
+ this.client = new Client({
+  authStrategy: new LocalAuth({ clientId: this.botId }),
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu'
+    ]
+  }
+});
   this.registerEvents();
   await this.client.initialize();
 }
