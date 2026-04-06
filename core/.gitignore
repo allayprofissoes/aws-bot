@@ -1,5 +1,5 @@
 node_modules/
 .wwebjs_auth/
 sessions/
+.cache/
 .env
-npm-debug.log
